@@ -127,14 +127,15 @@ def derivative_componets():
     return H1u_theta, H1u_phi, H1u_gamma, H1u_f, H1v_theta, H1v_phi, H1v_gamma, H1v_f
 
 
-def gradient(lines, f_, theta_, phi_, gamma_):
+def gradient(image, lines, f_, theta_, phi_, gamma_):
     H1u_theta, H1u_phi, H1u_gamma, H1u_f, H1v_theta, H1v_phi, H1v_gamma, H1v_f = derivative_componets()
 
-    h, w, _ = np.shape(image)
+    h_, w_, _ = np.shape(image)
 
-    K = np.array([[f_, 0, 0],
-                  [0, f_, 0],
+    K = np.array([[f_, 0, w_ / 2],
+                  [0, f_, h_ / 2],
                   [0, 0, 1]])
+
     # Rotation matrices around the X, Y, and Z axis
     RX = np.array([[1, 0, 0],
                    [0, np.cos(theta_), -np.sin(theta_)],
@@ -150,7 +151,7 @@ def gradient(lines, f_, theta_, phi_, gamma_):
 
     # Composed rotation matrix with (RX, RY, RZ)
     R = np.dot(np.dot(RX, RY), RZ)
-    t = [1, 1, 1]
+    t = [0, 0, 1]
     R[:, 2] = t
     # H function
     H = np.dot(K, np.dot(R, inv(K)))
@@ -168,72 +169,76 @@ def gradient(lines, f_, theta_, phi_, gamma_):
         v1 = np.dot(H1, v)
 
         # derivative for E (1st term)
-        w = (line[0] + line[2])**2 + (line[1] + line[3])**2
+        weighted = (line[0] + line[2])**2 + (line[1] + line[3])**2
         d = min(abs(u1[0] / u1[2] - v1[0] / v1[2]), abs(u1[1] / u1[2] - v1[1] / v1[2])) ** 2
 
         if (abs(u1[0] / u1[2] - v1[0] / v1[2]) <= abs(u1[1] / u1[2] - v1[1] / v1[2])) and (u1[0] / u1[2] > v1[0] / v1[2]):
             dd_H1u = np.array([1 / u1[2], -1 / u1[2], (-u1[0] + u1[1]) / (u1[2] ** 2)])
-            dE_tmp = w * 2 * d * dd_H1u
+            dE_tmp = weighted * 2 * d * dd_H1u
             f, theta, phi, gamma = symbols('f theta phi gamma')
             u1, u2, u3 = symbols('u1 u2 u3')
             v1, v2, v3 = symbols('v1 v2 v3')
+            w, h = symbols('w h')
 
             dE1 = dE1 + dE_tmp.dot(H1u_theta.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
             dE2 = dE2 + dE_tmp.dot(H1u_phi.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
             dE3 = dE3 + dE_tmp.dot(H1u_gamma.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
             dE4 = dE4 + dE_tmp.dot(H1u_f.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
 
         elif (abs(u1[0] / u1[2] - v1[0] / v1[2]) <= abs(u1[1] / u1[2] - v1[1] / v1[2])) and (u1[0] / u1[2] <= v1[0] / v1[2]):
             dd_H1u = np.array([-1 / u1[2], 1 / u1[2], (u1[0] - u1[1]) / (u1[2] ** 2)])
-            dE_tmp = w * 2 * d * dd_H1u
+            dE_tmp = weighted * 2 * d * dd_H1u
             f, theta, phi, gamma = symbols('f theta phi gamma')
             u1, u2, u3 = symbols('u1 u2 u3')
             v1, v2, v3 = symbols('v1 v2 v3')
+            w, h = symbols('w h')
 
             dE1 = dE1 + dE_tmp.dot(H1u_theta.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
             dE2 = dE2 + dE_tmp.dot(H1u_phi.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
             dE3 = dE3 + dE_tmp.dot(H1u_gamma.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
             dE4 = dE4 + dE_tmp.dot(H1u_f.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
 
         elif (abs(u1[0] / u1[2] - v1[0] / v1[2]) > abs(u1[1] / u1[2] - v1[1] / v1[2])) and (u1[1] / u1[2] <= v1[1] / v1[2]):
             dd_H1v = np.array([1 / v1[2], -1 / v1[2], (-v1[0] + v1[1]) / (v1[2] ** 2)])
-            dE_tmp = w * 2 * d * dd_H1v
+            dE_tmp = weighted * 2 * d * dd_H1v
             f, theta, phi, gamma = symbols('f theta phi gamma')
             u1, u2, u3 = symbols('u1 u2 u3')
             v1, v2, v3 = symbols('v1 v2 v3')
+            w, h = symbols('w h')
 
             dE1 = dE1 + dE_tmp.dot(H1v_theta.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
             dE2 = dE2 + dE_tmp.dot(H1v_phi.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
             dE3 = dE3 + dE_tmp.dot(H1v_gamma.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
             dE4 = dE4 + dE_tmp.dot(H1v_f.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
 
         else:
             dd_H1v = np.array([-1 / v1[2], 1 / v1[2], (v1[0] - v1[1]) / (v1[2] ** 2)])
-            dE_tmp = w * 2 * d * dd_H1v
+            dE_tmp = weighted * 2 * d * dd_H1v
             f, theta, phi, gamma = symbols('f theta phi gamma')
             u1, u2, u3 = symbols('u1 u2 u3')
             v1, v2, v3 = symbols('v1 v2 v3')
+            w, h = symbols('w h')
 
             dE1 = dE1 + dE_tmp.dot(H1v_theta.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
             dE2 = dE2 + dE_tmp.dot(H1v_phi.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
             dE3 = dE3 + dE_tmp.dot(H1v_gamma.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
             dE4 = dE4 + dE_tmp.dot(H1v_f.subs({f:f_, theta:theta_, phi:phi_, gamma:gamma_, u1:u[0], u2:u[1], u3:u[2],
-                                                 v1:v[0], v2:v[1], v3:v[2]}))
+                                                 v1:v[0], v2:v[1], v3:v[2], h:h_, w: w_}))
 
     dE = [dE1, dE2, dE3, dE4]
     return dE
@@ -244,6 +249,7 @@ def gradient_descent_optimizer(image, max_iters, learning_rate):
     init_theta = 0
     init_phi = 0
     init_gamma = 0
+
     for i in range(max_iters):
         # Feed forward
         lines = line_detection(image)
@@ -251,17 +257,17 @@ def gradient_descent_optimizer(image, max_iters, learning_rate):
         rectification = cost_function(image, lines)
         print(rectification)
         # Compute gradient
-        f, theta, phi, gamma = gradient(lines, init_f, init_theta, init_phi, init_gamma)
+        f, theta, phi, gamma = gradient(image, lines, init_f, init_theta, init_phi, init_gamma)
         print(theta, phi, gamma)
         init_f = np.float32(398)
         init_theta = np.float32(init_theta - theta * np.pi / 180)
         init_phi = np.float32(init_phi - phi * np.pi / 180)
         init_gamma = np.float32(init_gamma - gamma * np.pi / 180)
 
-        init_theta, init_phi, init_gamma = -20, 0, 0
-        init_theta = np.float32(init_theta * np.pi / 180)
-        init_phi = np.float32(init_phi * np.pi / 180)
-        init_gamma = np.float32(init_gamma * np.pi / 180)
+        # init_theta, init_phi, init_gamma = -20, 0, 0
+        # init_theta = np.float32(init_theta * np.pi / 180)
+        # init_phi = np.float32(init_phi * np.pi / 180)
+        # init_gamma = np.float32(init_gamma * np.pi / 180)
 
         h, w, _ = np.shape(image)
 
@@ -301,4 +307,4 @@ if __name__ == '__main__':
     # lines = line_detection(image)
     # retification = cost_function(image, lines)
     # derivative_componets()
-    gradient_descent_optimizer(image, 3, 0.1)
+    gradient_descent_optimizer(image, 10, 0.1)
