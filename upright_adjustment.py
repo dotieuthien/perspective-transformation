@@ -23,9 +23,10 @@ def line_detection(image):
 def cost_function(image, lines, theta=0, phi=0, gamma=0, f=1, epsilon=1):
     h, w, _ = np.shape(image)
 
-    K = np.array([[f, 0, 0],
-                  [0, f, 0],
+    K = np.array([[f, 0, w / 2],
+                  [0, f, h / 2],
                   [0, 0, 1]])
+
     # Rotation matrices around the X, Y, and Z axis
     RX = np.array([[1, 0, 0],
                    [0, np.cos(theta), -np.sin(theta)],
@@ -40,11 +41,14 @@ def cost_function(image, lines, theta=0, phi=0, gamma=0, f=1, epsilon=1):
                    [0, 0, 1]])
     # Composed rotation matrix with (RX, RY, RZ)
     R = np.dot(np.dot(RX, RY), RZ)
-    t = np.array([])
+
+    t = [0, 0, 1]
     R[:, 2] = t
+
     # H function
-    H = np.dot(K, R)
-    H1 = inv(H)
+    H = np.dot(K, np.dot(R, inv(K)))
+    # H1 = np.dot(K, np.dot(R, inv(K)))
+    H1 = H
 
     # The 1st term
     E = 0
@@ -68,17 +72,20 @@ def cost_function(image, lines, theta=0, phi=0, gamma=0, f=1, epsilon=1):
 
 def derivative_componets():
     # Build graph of model
-    # Variales definition
     f, theta, phi, gamma = symbols('f theta phi gamma')
     u1, u2, u3 = symbols('u1 u2 u3')
     v1, v2, v3 = symbols('v1 v2 v3')
+    w, h = symbols('w h')
+
     # K matrix for internal paprameter of camera
-    K = np.array([[f, 0, 0],
-                  [0, f, 0],
+    K = np.array([[f, 0, w / 2],
+                  [0, f, h / 2],
                   [0, 0, 1]])
-    K1 = np.array([[1/f, 0, 0],
-                  [0, 1/f, 0],
+
+    K1 = np.array([[1/f, 0, - w / 2],
+                  [0, 1/f, - h / 2],
                   [0, 0, 1]])
+
     # Rotation matrices around the X, Y, and Z axis
     RX = np.array([[1, 0, 0],
                    [0, cos(theta), -sin(theta)],
@@ -95,9 +102,13 @@ def derivative_componets():
     RXY = RX.dot(RY)
     # Rotation matrix
     R = RXY.dot(RZ)
+
+    # Translation vector
+    t = [0, 0, 1]
+    R[:, 2] = t
     # Inverse response funtion H
-    R1 = Matrix(R).T
-    H1 = K1.dot(R1)
+    # R1 = Matrix(R).T
+    H1 = K.dot(R.dot(K1))
 
     # Compute derivative for each component
     u = Matrix([u1, u2, u3])
@@ -139,11 +150,11 @@ def gradient(lines, f_, theta_, phi_, gamma_):
 
     # Composed rotation matrix with (RX, RY, RZ)
     R = np.dot(np.dot(RX, RY), RZ)
-    t = [0, 0, -max(h, w)]
+    t = [1, 1, 1]
     R[:, 2] = t
     # H function
-    H = np.dot(K, R)
-    H1 = inv(H)
+    H = np.dot(K, np.dot(R, inv(K)))
+    H1 = H
 
     dE1 = 0
     dE2 = 0
@@ -241,16 +252,23 @@ def gradient_descent_optimizer(image, max_iters, learning_rate):
         print(rectification)
         # Compute gradient
         f, theta, phi, gamma = gradient(lines, init_f, init_theta, init_phi, init_gamma)
-        init_f = np.float32(init_f - f)
+        print(theta, phi, gamma)
+        init_f = np.float32(398)
         init_theta = np.float32(init_theta - theta * np.pi / 180)
         init_phi = np.float32(init_phi - phi * np.pi / 180)
         init_gamma = np.float32(init_gamma - gamma * np.pi / 180)
 
+        init_theta, init_phi, init_gamma = -20, 0, 0
+        init_theta = np.float32(init_theta * np.pi / 180)
+        init_phi = np.float32(init_phi * np.pi / 180)
+        init_gamma = np.float32(init_gamma * np.pi / 180)
+
         h, w, _ = np.shape(image)
 
-        K = np.array([[init_f, 0, 0],
-                    [0, init_f, 0],
+        K = np.array([[init_f, 0, w /2],
+                    [0, init_f, h / 2],
                     [0, 0, 1]])
+
         # Rotation matrices around the X, Y, and Z axis
         RX = np.array([[1, 0, 0],
                     [0, np.cos(init_theta), -np.sin(init_theta)],
@@ -266,20 +284,20 @@ def gradient_descent_optimizer(image, max_iters, learning_rate):
 
         # Composed rotation matrix with (RX, RY, RZ)
         R = np.dot(np.dot(RX, RY), RZ)
-        # t = [0, 0, -max(h, w)]
-        # R[:, 2] = t
+        t = [0, 0, 1]
+        R[:, 2] = t
+
         # H function
-        H = np.dot(K, R)
-        print(H)
-        H1 = np.linalg.inv(H)
+        H = np.dot(K, np.dot(R, inv(K)))
+        H1 = H
         print(H1)
-        image = cv2.warpPerspective(image.copy(), np.float32(H1), (w, h))
-        cv2.imwrite('image_out_p.png', image)
+        image_out = cv2.warpPerspective(image.copy(), np.float32(H1), (w, h))
+        cv2.imwrite('image_out_' + str(i) + '.png', image_out)
 
 
 
 if __name__ == '__main__':
-    image = cv2.imread('test_images/4.jpg')
+    image = cv2.imread('test_images/2.jpg')
     # lines = line_detection(image)
     # retification = cost_function(image, lines)
     # derivative_componets()
