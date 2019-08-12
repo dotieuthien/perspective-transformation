@@ -1,3 +1,0 @@
-# Perspective Transform
-
-### Algorithm
