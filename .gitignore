@@ -36,6 +36,8 @@ data/datasets/*
 data/*
 *debug*
 /data
-*.DS_Store
+*/.DS_Store
 *__pycache__*
 /app/ui/*
+
+/.idea
