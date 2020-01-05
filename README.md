@@ -22,5 +22,5 @@ Image after rendering
 
 The result after cropping
 
-<img width="1000" alt="First result" src="./figures/result.png">
+<img alt="First result" src="./figures/result.png">
 
