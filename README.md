@@ -16,11 +16,11 @@ pip install ocrd-fork-pylsd
 ```
 
 ### Result
-Image after rendering
+#### Image after rendering
 
 <img width="1000" alt="First result" src="./figures/perspective_test.png">
 
-The result after cropping
+#### The result after cropping
 
 <img alt="First result" src="./figures/result.png">
 
