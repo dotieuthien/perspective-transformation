@@ -14,3 +14,7 @@ Install line detector package for python 3
 pip install pylsd
 pip install ocrd-fork-pylsd
 ```
+
+### Result
+
+<img width="1000" alt="First result" src="./figures/perspective_test.png">
