@@ -24,3 +24,7 @@ pip install ocrd-fork-pylsd
 
 <img alt="First result" src="./figures/result.png">
 
+### Reference
+[Rectification of planar targets using line segments](https://www.semanticscholar.org/paper/Rectification-of-planar-targets-using-line-segments-An-Koo/e1feceb12777c06727da3b281d2b8d7472182444)
+
+[Perspective transform opencv](https://www.pyimagesearch.com/2014/08/25/4-point-opencv-getperspective-transform-example/)
